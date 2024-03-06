@@ -16,7 +16,7 @@ class Controllino():
             self.logger = logger
         self.message_from_plc = ''
 
-    def openControllinoSocket(self, server_ip:str, server_port:str):
+    def openSocket(self, server_ip:str, server_port:str):
         server_port = int(server_port)
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
@@ -27,7 +27,7 @@ class Controllino():
         except socket.error:
             self.logger.error('Failed to establish connection with Controllino PLC with address: ' + str(server_ip))
 
-    def closeControllinoSocket(self, address:str):
+    def closeSocket(self, address:str):
         try:
             self.client_socket.close()
             self.logger.info('Connection closed with Controllino with address: ' + str(address))
@@ -65,7 +65,7 @@ class Controllino():
         except Exception:
             self.logger.error('Error in PLC FUnction : receiveMessageFromServer')
 
-    def setControllinoOutput(self, pin_number:str, pin_value:int):
+    def setOutput(self, pin_number:str, pin_value:int):
         '''SETS THE OUTPUT FOR TELEGRAM: for example SET_D0_IO_1 for relay output SET_R0_IO_1 for PWM output
         SET_D0_PWM_100.'''
         self.message_from_plc=""
@@ -106,7 +106,7 @@ class Controllino():
         except Exception:
             self.logger.error('Error in PLC function setOutput(). Check Cmd')
 
-    def getControllinoInput(self, pin_number:str):
+    def getInput(self, pin_number:str):
         '''Get  input from PLC COntrollino. THE COMMAND IS GET_A0_A( <<<<for analog input)
         for digital input >>>>> SET_A0_D'''
         try:

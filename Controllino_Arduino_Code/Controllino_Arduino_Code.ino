@@ -1,9 +1,9 @@
 
-#include <Controllino.h> /* Usage of CONTROLLINO library allows you to use CONTROLLINO_xx aliases in your sketch. */
+#include <Controllino.h>
 #include <Ethernet.h>
 
 //Developed by WRA.
-//DEFIND THE CONTROLLER BEFORE UPLOADING INTO CONTROLLER
+//DEFIND THE CONTROLLER BEFORE UPLOADING CODE INTO CONTROLLER
 // The controller value can be MEGA or MAXI or MINI
 //===================================================
 String controller = "MEGA";
@@ -24,7 +24,9 @@ struct messages {
   int error_state = 0;
   String output_state = "";
 };
-const int set_delay = 50;  //delay value to get inputfeedback after setting output [ms]
+
+/* DECLARING GLOBAL VARIABLES*/
+const int set_delay = 50;
 messages client_message;
 char c;
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
@@ -33,12 +35,64 @@ byte subnet[] = { 255, 255, 0, 0 };
 EthernetServer server(100);
 EthernetClient client;
 
-// the setup function runs once when you press reset (CONTROLLINO RST button) or connect the CONTROLLINO to the PC
+
 void setup() {
-  //SETUP OUTPUT AND INPUT PINS
-  //Serial.begin(115200);
+
   Ethernet.begin(mac, ip, subnet);
   server.begin();
+  int i = 0;
+
+  /* INITILIZATION OF OUTPUTS AND INPUTS*/
+  /* FOR MEGA CONTROLLINO; THE PORTS ARE MAPPED ACCORDING TO PINOUT:PDF TABLE THAT IS FOUND 
+  https://www.controllino.com/wp-content/uploads/2023/05/CONTROLLINO_MEGA_Pinout_Table.pdf
+  HERE THE PINTS ARE TAKEN AS NUMBER AS ARDUINO MEGA BOARD*/
+
+
+  if (controller == "MEGA") {
+    /* DIGITAL AND RELAY OUTPUT INITILIZATION*/
+    for (i = 2; i <= 13; i++) /* DO-D11 */
+    {
+      pinMode(i, OUTPUT);
+    }
+    i = 0;
+    for (i = 42; i <= 49; i++) /* D12-D19 */
+    {
+      pinMode(i, OUTPUT);
+    }
+    i = 0;
+    for (i = 77; i <= 80; i++) /* D20-D23 */
+    {
+      pinMode(i, OUTPUT);
+    }
+    i = 0;
+    for (i = 22; i <= 37; i++) /* R0-R15 */
+    {
+      pinMode(i, OUTPUT);
+    }
+
+    /* ANALOGE INPUT INITILIZATION*/
+    i = 0;
+    for (i = 54; i <= 69; i++) {
+      pinMode(i, INPUT);
+    }
+  }
+  if (controller == "MAXI") {
+    for (i = 2; i <= 13; i++) /* DO-D11 */
+    {
+      pinMode(i, OUTPUT);
+    }
+    i = 0;
+    for (i = 22; i <= 31; i++) /* RO-R9 */
+    {
+      pinMode(i, OUTPUT);
+    }
+
+    i = 0;
+    for (i = 54; i <= 63; i++) /* AO-A9 */
+    {
+      pinMode(i, INPUT);
+    }
+  }
 }
 
 void Read_PC_message() {
@@ -58,7 +112,7 @@ void Read_PC_message() {
 }
 
 void port_map_output() {
-  if (controller == 'MEGA') {
+  if (controller == "MEGA") {
 
 
     // Assign the values of internal port number to given user port number.
@@ -98,7 +152,7 @@ void port_map_output() {
       }
     }
   }
-  if (controller == 'MAXI')  // Code not tested on  MAXI(10.1.2024)
+  if (controller == "MAXI")  // 
   {
     if (client_message.pin_selection[0] == 'D')  // D for Digital
     {
@@ -112,7 +166,7 @@ void port_map_output() {
       client_message.port_number = client_message.pin_number + 22;  //Mapping Relay port from 22-37 (R0-R15)
     }
   }
-  if (controller == 'MINI')  //todo: TEST THE CODE ON MINI: ALSO MAP THE PORTS FOR RELAY OUTPUTS:
+  if (controller == "MINI")  //todo: TEST THE CODE ON MINI: ALSO MAP THE PORTS FOR RELAY OUTPUTS:
   {
     if (client_message.pin_selection[0] == 'D')  // D for Digital
     {
@@ -185,6 +239,7 @@ void OutputControl() {
     if (client_message.pwm_or_io == "IO")  //Checks if IO is in telegram from the client.
     {
 
+
       digitalWrite(client_message.port_number, client_message.output_value);
       delay(50);
       if (client_message.pin_selection[0] == 'D') {
@@ -209,9 +264,17 @@ void OutputControl() {
 void port_map_input() {
 
   if (client_message.pin_selection[0] == 'A') {
-    if (controller == 'MEGA') {
+    if (controller == "MEGA") {
 
       if (client_message.pin_number >= 0 && client_message.pin_number <= 15)  //A0 to A15 Mapping (Starts with 54-69)
+      {
+        client_message.port_number = client_message.pin_number + 54;
+      } else {
+        client_message.error_state = 1;
+      }
+    }
+    if (controller == "MAXI") {
+      if (client_message.pin_number >= 0 && client_message.pin_number <= 9)  //A0 to A9 Mapping (Starts with 54-69)
       {
         client_message.port_number = client_message.pin_number + 54;
       } else {
