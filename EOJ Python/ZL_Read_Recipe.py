@@ -10,18 +10,17 @@ start_time = time.time()
 class ZL_Read_Recipe():
 
 
-    __error = 0
-    recipe_output_dictionary = {}
-    recipe_read_successful = False
+    def __init__(self, logger = None):
 
-    def __int__(self, logger=None) -> None:
+        self.recipt_output: dict = {}
+        self.recipt_read: bool = False
+        self.__error = 0
 
-        #self.recipt_output_dictionary: dict = {}
-        #self.recipt_read_successful: bool = False
         if logger == None:
             self.logger = logging
         else:
             self.logger = logger
+
 
     def __read_sqlite_parm_names(self, actual_machine_name):
 
@@ -52,8 +51,9 @@ class ZL_Read_Recipe():
 
         try:
             database_dataframe = self.__read_sqlite_parm_names('Rezept_Tabelle_Param')
+            self.__error = 0
         except:
-            ZL_Read_Recipe.__error = 1
+            self.__error = 1
             logging.error('Error : Sqlite3 failed to recgonize Table : read_recipe_table')
 
         if len(database_dataframe) != 0:
@@ -66,10 +66,10 @@ class ZL_Read_Recipe():
                 read_table: object = csv.reader(file, delimiter=';')
                 recipe_table: object = list(read_table)
         except:
-            ZL_Read_Recipe.__error = 1
+            self.__error = 1
             logging.error('Error : CSV File cannot be read from Server : read_recipe_table')
         del read_table
-        if ZL_Read_Recipe.__error != 1:
+        if self.__error != 1:
             for table_row in recipe_table:
                 if table_row[0] == recipe_group_row:
                     required_group_row: list = table_row
@@ -79,6 +79,7 @@ class ZL_Read_Recipe():
                     required_datatype: list = table_row
                 if table_row[0] == module_dmc:
                     required_module_article_row: list = table_row
+
             for index_dataframe_column in range(0, len(database_dataframe.columns)):
                 for index in range(0, len(required_group_row)):
                     if database_dataframe.columns[index_dataframe_column] == required_group_row[index]:
@@ -86,6 +87,7 @@ class ZL_Read_Recipe():
                         temp_index = temp_index + 1
                         required_group_index_array.append(1)
                 temp_index = 0
+
                 for index in range(0, db_df_row):
                     for index_1 in range(0, len(required_parameter_row)):
                         a = database_dataframe.iloc[index][index_dataframe_column]
@@ -94,18 +96,18 @@ class ZL_Read_Recipe():
                             element_exist = required_group_index_array.count(index_1)
                             if element_exist >= 1:
                                 c = required_module_article_row[index_1]
-                                ZL_Read_Recipe.recipt_output_dictionary.update(
+                                self.recipt_output.update(
                                     {required_parameter_row[index_1]: required_module_article_row[index_1]})
                                 break
                         if database_dataframe.iloc[index][index_dataframe_column] == None:
                             break
                         if index_1 == len(required_parameter_row) - 1:
-                            ZL_Read_Recipe.recipt_output_dictionary.update(
+                            self.recipt_output.update(
                                 {database_dataframe.iloc[index][index_dataframe_column]: "NOT FOUND"})
-                            ZL_Read_Recipe.recipt_read_successful = False
+                            self.recipt_read = False
                     if database_dataframe.iloc[index][index_dataframe_column] == None:
                         break
-            if ZL_Read_Recipe.recipt_read_successful != False:
-                ZL_Read_Recipe.recipt_read_successful = True
+            if self.recipt_read != False:
+                self.recipt_read = True
 
         print("--- %s seconds ---" % (time.time() - start_time))
