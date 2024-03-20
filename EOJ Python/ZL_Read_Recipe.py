@@ -1,5 +1,4 @@
 import csv
-import time
 import logging
 import sqlite3
 import pandas as pd
@@ -52,14 +51,30 @@ class ZL_Read_Recipe():
 
         return article_no
 
+    def __check_if_outdic_emptyvalues(self,output_dic : dict):
+
+        dic_values = output_dic.values()
+        values_lst = list(dic_values)
+        key_lst = list(output_dic.keys())
+        for i in range(0,len(values_lst)):
+            if values_lst[i] == '':
+                self.recipe_read = False
+                item_empty = str(key_lst[i]) + '  :Empty Values in Recipe Table.'
+                logging.error(item_empty)
+
+
+
+
+
     def __read_sqlite_parm_names(self, table_name,sqlite_path):
 
         if self.__error == False:
+            sq_lite_database = sqlite3.connect(sqlite_path)
             try :
-                sq_lite_database = sqlite3.connect(sqlite_path)
+
                 sql_query = """SELECT name FROM sqlite_master 
                         WHERE type='table';"""
-                cursor: object = sq_lite_database.cursor()
+                '''cursor: object = sq_lite_database.cursor()
                 # executing our sql query
                 cursor.execute(sql_query)
                 machine_name_sql: list = cursor.fetchall()
@@ -67,20 +82,21 @@ class ZL_Read_Recipe():
                     machine_str = str(machine_name_sql[index])
                     machine_str = machine_str[2:len(machine_str) - 3]
                     if machine_str == table_name:
-                        break
+                        break'''
                 querry_message = "SELECT * FROM " + table_name
                 db_dataframe = pd.read_sql_query(querry_message, sq_lite_database)
             except Exception as e:
                 db_dataframe = []
                 self.recipe_read = False
-                logging.error(e+' : __read_sqlite_parm_names')
+                str_error = str (e) + ' in SQlite3 database'
+                logging.error('No table in Sqlite3 Database : read_recipe_table')
         if self.__error == True:
             db_dataframe = []
             self.recipe_read = False
 
         return db_dataframe
 
-    def read_recipe_table(self, module_dmc: str, recipe_file_address: str,sqlite_path : str):
+    def read_recipe_table(self, module_dmc: str, recipe_file_address: str,sqlite_path : str , sqlite_table_name : str):
 
         recipe_group_row = 'Gruppe'  # See Recezipt.csv file for row named as 'Gruppe'
         recipe_parameter_row = 'Parameter'
@@ -88,7 +104,6 @@ class ZL_Read_Recipe():
         required_group_index_array = [0]
         temp_index = 0
         database_dataframe = []
-        table_name = 'Rezept_Tabelle_Param'
         required_module_article_row = []
         required_group_row = []
         required_parameter_row = []
@@ -103,17 +118,16 @@ class ZL_Read_Recipe():
             self.recipe_read = False
             logging.error('Error : SQL File name or File does not Exist :read_recipe_table ')
 
-        try:
-            database_dataframe = self.__read_sqlite_parm_names(table_name,sqlite_path)
-            if database_dataframe.empty:
-                self.__error = True
-                self.recipe_read = False
-            else:
-                self.__error = False
-        except Exception as e:
-            self.recipe_read = False
+
+        database_dataframe = self.__read_sqlite_parm_names(sqlite_table_name,sqlite_path)
+
+        if len(database_dataframe) == 0:
             self.__error = True
-            logging.error(e)
+            self.recipe_read = False
+        else:
+            self.__error = False
+
+
 
         if self.__error == False:
 
@@ -180,6 +194,9 @@ class ZL_Read_Recipe():
                         if database_dataframe.iloc[index][index_dataframe_column] is None:
                             break
                 if self.recipe_read:
-                    self.recipt_read = True
+                    self.recipe_read = True
+                    self.__check_if_outdic_emptyvalues(self.recipe_output)
+
+
 
 
