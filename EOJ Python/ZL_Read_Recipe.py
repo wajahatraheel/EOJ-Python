@@ -5,7 +5,7 @@ import sqlite3
 import pandas as pd
 import os
 
-start_time = time.time()
+
 
 
 class ZL_Read_Recipe():
@@ -101,7 +101,7 @@ class ZL_Read_Recipe():
         else:
             self.__error = True
             self.recipe_read = False
-            logging.error('Error : SQL Files name or File does not Exist :read_recipe_table ')
+            logging.error('Error : SQL File name or File does not Exist :read_recipe_table ')
 
         try:
             database_dataframe = self.__read_sqlite_parm_names(table_name,sqlite_path)
@@ -182,4 +182,4 @@ class ZL_Read_Recipe():
                 if self.recipe_read:
                     self.recipt_read = True
 
-        print("--- %s seconds ---" % (time.time() - start_time))
+
